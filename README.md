@@ -1,4 +1,4 @@
-
+full code on master branch , this is main branch pls switch branch to see full code(frontend)
 Chat Application Documentation
 This is a Real-Time Chat Application with a ReactJS frontend and Flask backend. It allows users to send and receive messages in real-time using WebSockets and stores messages in a SQLite database.
 
