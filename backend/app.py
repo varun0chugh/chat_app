@@ -8,10 +8,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chat.db'
 app.config['SECRET_KEY'] = 'mysecret'
 db = SQLAlchemy(app)
 
-# CORS setup to allow requests from frontend
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow CORS for all origins
 
-socketio = SocketIO(app, cors_allowed_origins="*")  # SocketIO CORS configuration
+CORS(app, resources={r"/*": {"origins": "*"}}) 
+
+socketio = SocketIO(app, cors_allowed_origins="*")  
 
 # Database models
 class User(db.Model):
@@ -24,7 +24,7 @@ class Message(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.String(200), nullable=False)
 
-# Add default users
+
 def add_default_users():
     if User.query.count() == 0:
         default_users = ['User 1', 'User 2', 'User 3']
@@ -33,28 +33,28 @@ def add_default_users():
             db.session.add(user)
         db.session.commit()
 
-# Add default users before first request or on each request
+
 @app.before_request
 def before_request():
     add_default_users()
 
-# Serve React build files
+
 @app.route('/')
 def serve_react():
     return send_from_directory(app.static_folder, 'index.html')
 
-# API for users
+
 @app.route('/api/users', methods=['GET'])
 def get_users():
     users = User.query.all()
     return jsonify([{'id': user.id, 'username': user.username} for user in users])
 
-# API for messages
+
 @app.route('/api/messages', methods=['POST'])
 def post_message():
     try:
         data = request.json
-        # Ensure all required fields are present
+        
         if not all(key in data for key in ['sender_id', 'receiver_id', 'content']):
             return jsonify({'error': 'Missing required fields'}), 400
 
@@ -67,14 +67,14 @@ def post_message():
         db.session.commit()
         return jsonify({'status': 'success'}), 201
     except Exception as e:
-        print(f"Error: {e}")  # Log the error for debugging
-        return jsonify({'error': str(e)}), 500  # Return the error message
+        print(f"Error: {e}")  
+        return jsonify({'error': str(e)}), 500  
 
-# WebSocket message handling
+
 @socketio.on('message')
 def handle_message(msg):
     try:
-        # Ensure all required fields are present
+        
         if not all(key in msg for key in ['sender', 'receiver', 'content']):
             return jsonify({'error': 'Missing required fields'}), 400
 
@@ -85,11 +85,11 @@ def handle_message(msg):
         )
         db.session.add(new_message)
         db.session.commit()
-        send(msg, broadcast=True)  # Send the message to all connected clients
+        send(msg, broadcast=True) 
     except Exception as e:
-        print(f"Error handling socket message: {e}")  # Log error for debugging
+        print(f"Error handling socket message: {e}")  
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Create tables if not already created
+        db.create_all() 
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
